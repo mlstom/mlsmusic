@@ -1,0 +1,16 @@
+export const genres = [
+    { title: 'Pop', value: 'POP',genreId:132 },
+    { title: 'Hip-Hop', value: 'HIP_HOP_RAP', genreId:116 },
+    { title: 'Dance', value: 'DANCE', genreId:113},
+    { title: 'Electronic', value: 'ELECTRONIC',genreId:106 },
+    { title: 'Soul', value: 'SOUL_RNB', genreId:169 },
+    { title: 'Alternative', value: 'ALTERNATIVE', genreId:85 },
+    { title: 'Rock', value: 'ROCK', genreId:152 },
+    { title: 'Latin', value: 'LATIN', genreId:197 },
+    { title: 'Film', value: 'FILM_TV', genreId:173 },
+    { title: 'Country', value: 'COUNTRY', genreId:84 },
+    { title: 'Reggae', value: 'REGGAE_DANCE_HALL', genreId:144 },
+    { title: 'Metal', value: 'METAL', genreId:464},
+    { title: 'Jazz', value: 'JAZZ', genreId:129},
+    { title: 'Folk', value: 'FOLK', genreId:466},
+  ];

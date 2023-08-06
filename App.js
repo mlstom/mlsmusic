@@ -1,12 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import { StateContext } from './context/StateContext';
+import Navigation from './StackNavigator';
 
-export default function App() {
+export default function App({ Component, pageProps }) {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <StateContext>
+      <Navigation />
+    </StateContext>
   );
 }
 
