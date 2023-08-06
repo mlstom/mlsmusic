@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { AntDesign, Ionicons, FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useStateContext } from '../context/StateContext';
 import { Video } from 'expo-av';
-import { useRoute } from '@react-navigation/native';
 
 const MusicScreen = () => {
     const navigation = useNavigation();
@@ -15,44 +14,28 @@ const MusicScreen = () => {
     const [paused, setPaused] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(-1);
 
-    const videoRef = useRef(null);
-    const isUnmounted = useRef(false);
-
     const handleBackPress = () => {
         navigation.goBack();
     };
+    
     let data = dataReceived
 
-
     useEffect(() => {
-        
-        console.log(dataReceived)
-        
         const initialIndex = findCurrentIndex();
         const initialSong = data[initialIndex];
-
         setActiveSong({ song: initialSong, isActive: true });
         playAudio();
-        videoRef.current.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate); 
         setIs(false); // Dodajte ovu liniju da resetujete is flag na false
         return () => {
             stopAudio();
         };
-
     }, []);
-
 
     const findCurrentIndex = () => {
         const activeSongPreviewUrl = activeSong?.song?.preview;
         if (!activeSongPreviewUrl) return -1;
 
         return data.findIndex(song => song.preview === activeSongPreviewUrl);
-    };
-
-    const onPlaybackStatusUpdate = (status) => {
-        if (status.didJustFinish) {
-            playNextSong();
-        }
     };
 
     const handlePlayPause = async () => {
@@ -66,7 +49,7 @@ const MusicScreen = () => {
 
     const playAudio = async () => {
         try {
-            await videoRef.current.playAsync();
+            await videoRef.playAsync();
             setIsPlaying(true);
         } catch (error) {
             console.error('Greška pri reprodukciji pesme: ', error);
@@ -75,7 +58,7 @@ const MusicScreen = () => {
 
     const pauseAudio = async () => {
         try {
-            await videoRef.current.pauseAsync();
+            await videoRef.pauseAsync();
             setIsPlaying(false);
         } catch (error) {
             console.error('Greška pri pauziranju pesme: ', error);
@@ -84,16 +67,15 @@ const MusicScreen = () => {
 
     const stopAudio = async () => {
         try {
-            if (videoRef.current) {
-                await videoRef.current.stopAsync();
+            if (videoRef && videoRef.stopAsync) {
+                await videoRef.stopAsync();
                 setIsPlaying(false);
             }
         } catch (error) {
-            if (!isUnmounted.current) {
-                console.error('Greška pri zaustavljanju pesme: ', error);
-            }
+            console.error('Greška pri zaustavljanju pesme: ', error);
         }
     };
+
     const playNextSong = async () => {
         try {
             const currentIndex = data.findIndex((song) => song.id === activeSong.song.id);
@@ -106,10 +88,11 @@ const MusicScreen = () => {
             console.error('Greška pri sledecoj pesmi: ', error);
         }
     };
+
     const playPreviousSong = async () => {
         try {
             const currentIndex = data.findIndex((song) => song.id === activeSong.song.id);
-            const nextIndex = (currentIndex - 1) % data.length;
+            const nextIndex = (currentIndex - 1 + data.length) % data.length;
             setActiveSong({ song: data[nextIndex], isActive: true });
             playAudio();
             setPaused(false)
@@ -118,6 +101,7 @@ const MusicScreen = () => {
             console.error('Greška pri sledecoj pesmi: ', error);
         }
     };
+
     const playRandomSong = () => {
         try {
             const randomIndex = Math.floor(Math.random() * data.length);
@@ -132,35 +116,30 @@ const MusicScreen = () => {
         }
     };
 
-
     const handleHeartPress = () => {
         if (activeSong.song.isFavorite) {
-            activeSong.song.isFavorite = false
+            activeSong.song.isFavorite = false;
             removeFromFavorites(activeSong.song.id);
         } else {
-            activeSong.song.isFavorite = true
+            activeSong.song.isFavorite = true;
             addToFavorites(activeSong.song);
         }
     };
 
     return (
         <View style={styles.container}>
-            {/* Strelica nazad */}
             <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
                 <AntDesign name="arrowleft" size={24} color="white" />
             </TouchableOpacity>
 
             <View style={styles.imageWrapper}>
-                {/* Prikaz slike */}
                 <Image source={{ uri: activeSong.song.album.cover_big }} style={styles.musicImage} />
 
-                {/* Informacije o pesmi */}
                 <View style={styles.songInfoContainer}>
                     <Text style={styles.songTitle}>{activeSong.song.title}</Text>
                     <Text style={styles.songArtist}>{activeSong.song.artist.name}</Text>
                 </View>
 
-                {/* Dugmad za reprodukciju/pauziranje i favorite */}
                 <View style={styles.controlsContainer}>
                     <TouchableOpacity style={styles.previousButton} onPress={playPreviousSong}>
                         <FontAwesome name="step-backward" size={30} color="white" />
@@ -179,7 +158,6 @@ const MusicScreen = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Dugmad za favorite i nasumično pustanje */}
                 <View style={styles.extraControlsContainer}>
                     <TouchableOpacity style={styles.favoriteButton} onPress={handleHeartPress}>
                         {activeSong.song.isFavorite ? <FontAwesome name="heart" size={30} color="white" /> : <FontAwesome name="heart-o" size={30} color="white" />}
@@ -189,13 +167,13 @@ const MusicScreen = () => {
                         <Ionicons name="shuffle" size={30} color="white" />
                     </TouchableOpacity>
                 </View>
-
             </View>
+
             <Video
-                ref={videoRef}
+                ref={(ref) => (videoRef = ref)}
                 source={{ uri: activeSong.song.preview }}
                 shouldPlay={false}
-                isLooping={false}
+                isLooping={true}
                 resizeMode="cover"
                 style={{ width: 0, height: 0 }}
             />
